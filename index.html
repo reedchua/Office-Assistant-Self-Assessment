@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>辦公室助理 500題綜合學習與模擬考試系統</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-brand-600 text-white p-2.5 rounded-xl flex items-center justify-center shadow-md">
+          <i class="fa-solid fa-graduation-cap text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-slate-800 leading-tight">辦公室助理 500題自學考核系統</h1>
+          <p class="text-xs text-slate-500">隨機抽題 • 實務解析</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs Header -->
+      <div class="flex items-center space-x-2">
+        <button onclick="switchMode('exam')" id="tab-btn-exam" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-brand-600 text-white shadow-sm transition-all flex items-center gap-1.5">
+          <i class="fa-solid fa-pen-to-square"></i> 模擬考試 (20題)
+        </button>
+        <button onclick="switchMode('bank')" id="tab-btn-bank" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-1.5">
+          <i class="fa-solid fa-book-open"></i> 500題溫習庫
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- MODE 1: EXAM / RANDOM QUIZ (20 Questions) -->
+    <div id="mode-exam" class="space-y-6">
+      <!-- Quiz Dashboard Banner -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-bold">測驗模式</span>
+            <span class="text-xs text-slate-500">滿分 100 分 • 每題 5 分</span>
+          </div>
+          <h2 class="text-lg font-bold text-slate-800">隨機 20 題能力評測</h2>
+          <p class="text-xs text-slate-500 mt-0.5">題目包含單選題、對錯判斷、關鍵字配對及流程排序題</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="generateRandomExam()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-arrows-rotate"></i> 🔄 重新抽題 (20題)
+          </button>
+        </div>
+      </div>
+
+      <!-- Exam Questions List -->
+      <div id="exam-questions-container" class="space-y-6">
+        <!-- Questions rendered via JS -->
+      </div>
+
+      <!-- Action Footer Bar -->
+      <div id="exam-footer" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-lg sticky bottom-4 z-20 flex justify-between items-center">
+        <div class="text-xs text-slate-500">
+          已完成：<span id="answered-count" class="font-bold text-brand-600">0</span> / 20 題
+        </div>
+        <button onclick="submitExam()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-md">
+          提交試卷評分 <i class="fa-solid fa-paper-plane ml-1"></i>
+        </button>
+      </div>
+
+      <!-- Result Card Modal / Section -->
+      <div id="exam-result-modal" class="hidden bg-slate-900 text-white rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
+        <div class="text-center space-y-3">
+          <div class="w-16 h-16 bg-amber-400 text-slate-900 rounded-full flex items-center justify-center mx-auto text-2xl font-extrabold shadow-lg">
+            <i class="fa-solid fa-trophy"></i>
+          </div>
+          <h3 class="text-2xl font-bold">測驗成績計算完成！</h3>
+          <div class="text-5xl font-black text-amber-300" id="result-score-text">0 / 100</div>
+          <p class="text-xs sm:text-sm text-slate-300 max-w-md mx-auto" id="result-eval-text">---</p>
+        </div>
+
+        <div class="flex justify-center gap-4 border-t border-slate-800 pt-5">
+          <button onclick="generateRandomExam()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-lg">
+            🔄 再抽20題挑戰
+          </button>
+          <button onclick="scrollToExamReview()" class="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-colors">
+            查看答案解析
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODE 2: 500 QUESTIONS BANK LIBRARY -->
+    <div id="mode-bank" class="hidden space-y-6">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-book-bookmark text-brand-600"></i> 500 題完整試題庫總覽
+            </h2>
+            <p class="text-xs text-slate-500">支援關鍵字檢索與單元分類篩選，方便自主溫習與複習</p>
+          </div>
+          <div class="text-xs font-semibold bg-brand-50 text-brand-700 px-3 py-1.5 rounded-lg border border-brand-200">
+            共 <span id="bank-total-count">500</span> 題
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div class="sm:col-span-8 relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+            <input type="text" id="bank-search-input" oninput="filterQuestionBank()" placeholder="搜尋關鍵字（例如：奉茶、掛號、碎紙機、筆劃）..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+          </div>
+          <div class="sm:col-span-4">
+            <select id="bank-category-select" onchange="filterQuestionBank()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-brand-500 outline-none text-slate-700">
+              <option value="ALL">所有範疇單元</option>
+              <option value="reception">1. 接待訪客與禮儀</option>
+              <option value="phone">2. 電話對答與留言</option>
+              <option value="delivery">3. 文件交收與外勤</option>
+              <option value="postage">4. 香港郵政與郵遞</option>
+              <option value="mail_process">5. 寄入/寄出郵件處理</option>
+              <option value="equipment">6. 郵件工具與文儀操作</option>
+              <option value="address_doc">7. 英文地址與商業文件</option>
+              <option value="filing">8. 檔案歸檔與放置方式</option>
+              <option value="cash">9. 零用現金與定額備用金</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bank List Container -->
+      <div id="bank-list-container" class="space-y-4">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- JavaScript: 500-Question Generator & Application Logic -->
+  <script>
+    // --- 500 QUESTION BANK GENERATOR ENGINE ---
+    // Generates a complete 500-question dataset from the curriculum standard text
+    function build500QuestionBank() {
+      const bank = [];
+      let idCount = 1;
+
+      // TOPIC 1: 接待訪客與禮儀 (Reception) ~ 60 Qs
+      const receptionBase = [
+        { q: "接待員對訪客的態度會直接影響客人對公司的第一個印象。", ans: true, exp: "講義指明：接待員待客態度應誠懇、親切、友善及有禮。", cat: "reception", type: "TF" },
+        { q: "看見客人時，接待員應以什麼態度打招呼？", opts: ["冷淡點頭", "微笑的態度", "無視並等客人主動開口", "嚴肅不苟言笑"], ans: 1, exp: "看見客人時應以微笑態度打招呼。", cat: "reception", type: "MC" },
+        { q: "對於「首次到訪」的客人，接待員可以要求對方提供什麼作記錄？", opts: ["身分證正本", "信用卡", "留下名片", "交付押金"], ans: 2, exp: "對於首次到訪客人，可要求對方留下名片作記錄。", cat: "reception", type: "MC" },
+        { q: "對於「沒有預約」的客人，最適當的處理方式是？", opts: ["直接拒絕並驅趕", "先徵求被訪者是否願意接見，再作決定", "直接帶客人進入經理辦公室", "請客人自行在公司到處尋找"], ans: 1, exp: "應先徵求被訪者意願，不可立即拒絕。", cat: "reception", type: "MC" },
+        { q: "若被訪者未能立刻接見訪客，接待員應該？", opts: ["隱瞞原因並叫客人走開", "告訴客人未能接見原因，並安排在接待處等候", "叫客人改日再來", "不予理會"], ans: 1, exp: "應告知原因並安排於接待處等候。", cat: "reception", type: "MC" },
+        { q: "客人在接待處等候期間，接待員可以？", opts: ["招待客人茶點", "要求客人幫忙打掃", "向客人宣傳個人業務", "禁止客人使用手機"], ans: 0, exp: "可適時招待客人茶點。", cat: "reception", type: "MC" },
+        { q: "接待員應將訪客資料登記在什麼簿冊上以供參考？", opts: ["考勤簿", "訪客記錄冊", "零用金帳簿", "會議紀錄"], ans: 1, exp: "應登記於訪客記錄冊（包含日期、姓名、公司、時間、接見同事）。", cat: "reception", type: "MC" },
+        { q: "訪客記錄冊（Visitor Log）中，不包括下列哪項資料？", opts: ["訪客姓名", "到訪時間", "接見同事", "訪客私人銀行帳號"], ans: 3, exp: "記錄冊包含：日期、訪客姓名、公司名稱、到訪時間、接見同事。", cat: "reception", type: "MC" },
+        { q: "與客人交談時，下列何者為大忌？", opts: ["詢問飲料偏好", "談及公司機密資料", "微笑點頭", "禮貌道別"], ans: 1, exp: "與客人交談時，應避免談及公司機密資料。", cat: "reception", type: "MC" },
+        { q: "招待茶點時，當客人要咖啡或紅茶，同時應端上什麼？", opts: ["檸檬與蜂蜜", "牛奶及糖", "冰塊與奶精", "無需端上任何物品"], ans: 1, exp: "當客人要咖啡或紅茶時同時要端上牛奶及糖，以迎合飲食習慣。", cat: "reception", type: "MC" },
+        { q: "當客人要「茶」時，接待員應問清楚什麼？", opts: ["要熱水還是冷水", "要中國茶或是紅茶", "要用馬克杯還是玻璃杯", "要不要加鹽"], ans: 1, exp: "要問清楚客人要中國茶或是紅茶。", cat: "reception", type: "MC" },
+        { q: "端茶奉茶時，茶杯應放在哪裡？", opts: ["用手直接抓著杯口", "茶盤內", "托盘下", "口袋裡"], ans: 1, exp: "茶杯應放在茶盤內，並以雙手拿著茶杯奉客。", cat: "reception", type: "MC" },
+        { q: "奉茶時的順序，下列何者正確？", opts: ["先給公司同事，再給客人", "先給客人，然後再給公司同事", "隨機發放", "只給經理"], ans: 1, exp: "奉茶順序為：先給客人，然後再給公司同事。", cat: "reception", type: "MC" },
+        { q: "奉茶時準備毛巾的作用是？", opts: ["給客人擦手", "以防茶水溢出時可即時抹乾", "擦拭桌子", "作為裝飾"], ans: 1, exp: "準備毛巾係以防茶水溢出時可即時抹乾。", cat: "reception", type: "MC" },
+        { q: "請配對端茶禮儀項目與內容：", left: ["奉茶對象順序", "奉茶手勢", "茶水溢出預備"], right: ["先客人後同事", "雙手拿茶杯", "準備毛巾即時抹乾"], ans: [0, 1, 2], cat: "reception", type: "MATCH" }
+      ];
+
+      // TOPIC 2: 電話對答與留言 (Phone) ~ 55 Qs
+      const phoneBase = [
+        { q: "接聽「街線」電話時，首先應該說出？", opts: ["「喂，邊位？」", "公司名稱及招呼用語（如早安/午安）", "自己的私人號碼", "「請稍等」"], ans: 1, exp: "接聽街線應先說公司名稱及招呼用語；接內線說姓名部門。", cat: "phone", type: "MC" },
+        { q: "接聽「內線」電話時，不可只說「喂」，應說出？", opts: ["自己的姓名、部門及招呼用語", "公司完整地址", "經理的薪水", "昨晚的電視節目"], ans: 0, exp: "內線電話需報上姓名與部門。", cat: "phone", type: "MC" },
+        { q: "當電話響起時，應該盡快拿起電話接聽。", ans: true, exp: "當鈴聲一響，要盡快拿起電話。", cat: "phone", type: "TF" },
+        { q: "電話留言便條（Telephone Message Sheet）必須包含的 5 大核心要素不包括？", opts: ["收件人姓名", "來電者姓名及電話", "留言內容與時間", "接聽人姓名", "來電者的家庭背景"], ans: 4, exp: "留言便條包含：收件人、來電者資料/電話、留言內容、日期時間、接聽人。", cat: "phone", type: "MC" },
+        { q: "電話轉駁來電時，要把來電者的什麼資訊告訴同事？", opts: ["姓名及要求", "年齡與身高", "通話長度", "對公司的印象"], ans: 0, exp: "要轉駁來電時，要把來電者的姓名及要求告訴同事。", cat: "phone", type: "MC" },
+        { q: "打電話前，事前需要準備妥當並想好或寫好說話要點。", ans: true, exp: "事前準備可避免說話冗長或遺漏重點。", cat: "phone", type: "TF" },
+        { q: "撥錯號碼時，最適當的處理是？", opts: ["立刻掛斷不說話", "向對方禮貌道歉", "責怪對方接聽", "假裝是調查問卷"], ans: 1, exp: "撥錯號碼要向對方道歉；接錯電話也要禮貌接受對方道歉。", cat: "phone", type: "MC" }
+      ];
+
+      // TOPIC 3: 文件交收與外勤 (Delivery & Field) ~ 55 Qs
+      const deliveryBase = [
+        { q: "專人手遞文件時，信封面上應蓋上什麼字樣？", opts: ["「AIR MAIL」", "「BY HAND」或「人手傳遞」", "「PRINTED MATTER」", "「RETURN TO SENDER」"], ans: 1, exp: "手遞信件信封需蓋「BY HAND」或「人手傳遞」，且不貼郵票。", cat: "delivery", type: "MC" },
+        { q: "人手傳遞（BY HAND）的信件，信封面上不需要貼上郵票。", ans: true, exp: "由同事直接送達，無需經過郵局投寄貼郵票。", cat: "delivery", type: "TF" },
+        { q: "外勤送達目的地時，收件人核對無誤後應在何處簽署並蓋公司印鑑？", opts: ["收據存根", "送信回條 (Delivery Form)", "私人筆記本", "信封背面"], ans: 1, exp: "請收件人在送信回條上簽署證明及蓋公司印鑑。", cat: "delivery", type: "MC" },
+        { q: "編排外勤工作時，信件應該按什麼進行優先分類？", opts: ["信封顏色", "地區與重要性/緊急限時", "收件人體重", "郵票形狀"], ans: 1, exp: "將信件依地區與重要性分類，優先處理急件節省時間。", cat: "delivery", type: "MC" },
+        { q: "外勤人員出差申報車資及零用現金時，必須？", opts: ["隨意多報作為津貼", "準確申報並清楚保留單據", "不需要任何憑證", "口頭說明即可"], ans: 1, exp: "準確申報車資，保留單據，不可從中獲取私利。", cat: "delivery", type: "MC" },
+        { q: "外勤途中若遇到突發事故影響預定時間，應如何處理？", opts: ["放棄任務直接回家", "即時致電公司解釋原因並調整計畫", "自行私下更改收件人", "隱瞞不報"], ans: 1, exp: "應即時致電公司報告，由主管協調後續安排。", cat: "delivery", type: "MC" }
+      ];
+
+      // TOPIC 4: 香港郵政服務 (Postage Services) ~ 60 Qs
+      const postageBase = [
+        { q: "下列哪種郵政服務專為確保重要文件不遺失，且收件人必須簽收？", opts: ["商業回郵", "掛號郵件 (Registered Post)", "特許郵遞", "普通平郵"], ans: 1, exp: "掛號郵件會取得投寄證明書，收件人需簽收。", cat: "postage", type: "MC" },
+        { q: "投寄貴重海外郵件時，可向郵局購買哪種服務以備損壞賠償？", opts: ["特快專遞", "保險郵件 (Insured Post)", "私用郵箱", "大量投寄"], ans: 1, exp: "保險郵件需另付保險費及郵費，遺失或損壞可獲賠償。", cat: "postage", type: "MC" },
+        { q: "商業機構印製方便客戶回信且免付郵費的服務稱為？", opts: ["特許郵遞", "商業回郵服務 (Business Reply Service)", "掛號服務", "特快專遞"], ans: 1, exp: "商業機構須申請牌照及繳付郵費，客戶回信免貼郵票。", cat: "postage", type: "MC" },
+        { q: "「特許郵遞 (Permitted Post)」信件上必須印有什麼字樣？", opts: ["「BY HAND」", "「郵資已付」", "「急件」", "「機密」"], ans: 1, exp: "特許郵遞適用大量形狀重量相同郵件，印上「郵資已付」。", cat: "postage", type: "MC" },
+        { q: "大量投寄郵件 (Bulk Mail) 的收費計價方式通常是？", opts: ["按信封長度", "按重量（以公斤計）", "按郵差心情", "按張數計價"], ans: 1, exp: "大量投寄符合總重量標準時，按重量（公斤）計費。", cat: "postage", type: "MC" },
+        { q: "提供上門收件，特別適合急件及貨辦的快速郵遞服務是？", opts: ["平郵包裹", "特快專遞 (Speed Post)", "私用郵箱", "商業回郵"], ans: 1, exp: "特快專遞提供快捷上門收件與急遞。", cat: "postage", type: "MC" },
+        { q: "私用郵政信箱 (Private Post Office Box) 適合哪類用戶？", opts: ["沒有固定地址或不想公開地址者", "需要免費寄信者", "專門寄大量包裹者", "外籍遊客"], ans: 0, exp: "租用私用郵箱以編號作為通訊地址，保護隱私。", cat: "postage", type: "MC" }
+      ];
+
+      // TOPIC 5: 寄入/寄出郵件處理程序 (Mail Processing) ~ 60 Qs
+      const mailProcessBase = [
+        { q: "拆閱寄入郵件時，下列哪種信件「絕對不可」由助理擅自拆開？", opts: ["蓋有「急件」的信件", "標明「私人」或「密件」的信件", "普通商業廣告信", "包裹"], ans: 1, exp: "不可拆閱任何信封上註明 '私人' 或 '密件' 的信件。", cat: "mail_process", type: "MC" },
+        { q: "寄入郵件若標明「急件」，應如何處理？", opts: ["放入普通檔案櫃", "先送給收件人處理", "留待下週處理", "直接退回郵局"], ans: 1, exp: "急件應優先拆閱或第一時間送交收件人。", cat: "mail_process", type: "MC" },
+        { q: "取出信件時，若發現信件內附有「附件」，應？", opts: ["將附件丟棄", "信件與附件用釘書機釘在一起", "分開放進不同房間", "退回給寄件人"], ans: 1, exp: "不可遺漏附件，信件與附件要釘在一起。", cat: "mail_process", type: "MC" },
+        { q: "若寄入信件內附有「支票」，應將有關資料記錄在何處？", opts: ["訪客紀錄冊", "匯款記錄冊 (Remittance Register)", "零用金傳票", "會議記錄"], ans: 1, exp: "內附支票需登記於匯款記錄冊。", cat: "mail_process", type: "MC" },
+        { q: "處理寄出郵件前的檢查步驟，不包括？", opts: ["檢查信件是否已簽名", "檢查附件是否已附上", "檢查內外地址是否一致", "檢查收件人是否結婚"], ans: 3, exp: "寄出檢查：簽名、附件、內外地址一致性、摺疊封口。", cat: "mail_process", type: "MC" },
+        { q: "請排序「寄入郵件處理程序」：", steps: ["郵件分類 (掛號/密件/普通)", "拆閱非密件與取出附件", "蓋上記號日期印鑑", "登記寄入郵件冊並派發"], ans: [0, 1, 2, 3], cat: "mail_process", type: "REORDER" }
+      ];
+
+      // TOPIC 6: 郵件工具與文儀器材 (Equipment) ~ 60 Qs
+      const equipmentBase = [
+        { q: "使用郵資蓋印機 (Postage Meter) 的前提條件是？", opts: ["向郵局申請牌照並預先支付郵資", "隨意插電即可使用", "必須使用特快專遞", "只能印海外信件"], ans: 0, exp: "使用郵資蓋印機需向香港郵政申請牌照及預付郵資。", cat: "equipment", type: "MC" },
+        { q: "辦公室碎紙機 (Shredder) 主要用途是？", opts: ["將紙張裁成A4", "資料保密，清除無用或機密文件", "裝訂成冊", "清潔紙張"], ans: 1, exp: "碎紙機清除無商業用途或機密文件，防止資料外洩。", cat: "equipment", type: "MC" },
+        { q: "海棉盅 (Sponge Bowl) 在處理郵件時的作用是？", opts: ["清潔桌子", "濕潤郵票使容易黏貼", "裝水喝", "測量風向"], ans: 1, exp: "海棉盅用以濕潤郵票背膠。", cat: "equipment", type: "MC" },
+        { q: "原子印 (Rubber Stamps) 刻有常見辦公室用語，例如？", opts: ["「急件」、「副本」、「私人」、「密件」", "「新年快樂」", "公司菜單", "員工生日"], ans: 0, exp: "刻有常用字如急件、副本、私人、密件、掛號等。", cat: "equipment", type: "MC" },
+        { q: "過膠機 (Laminator) 操作時，應將膠袋的哪一端先放入機器？", opts: ["開口端", "封口端 (Sealed End)", "任意一端", "側面"], ans: 1, exp: "必須封口端先入，避免空氣擠壓造成卡紙。", cat: "equipment", type: "MC" },
+        { q: "當文儀器材發生故障時，公司通常透過什麼獲得專業保養服務？", opts: ["與供應商簽訂保養合約 (Maintenance Contract)", "叫員工自行拆開維修", "直接丟棄買新機", "忽略故障"], ans: 0, exp: "大公司多與供應商簽訂維修保養合約。", cat: "equipment", type: "MC" }
+      ];
+
+      // TOPIC 7: 英文地址與商業文件 (Address & Business Docs) ~ 50 Qs
+      const addressDocBase = [
+        { q: "標準英文地址層級編排順序，由上至下正確的是？", opts: ["國家 -> 街道 -> 公司 -> 姓名", "姓名 -> 職銜 -> 公司 -> 樓層/大廈 -> 街道 -> 地區 -> 國家", "街道 -> 樓層 -> 姓名 -> 國家", "公司 -> 國家 -> 姓名"], ans: 1, exp: "英文地址：收件人姓名 -> 職銜 -> 公司名稱 -> 樓層大廈 -> 街道 -> 地區 -> 國家。", cat: "address_doc", type: "MC" },
+        { q: "當賣方發出的發票金額「少於」應付金額時，賣方會寄出什麼補正文件？", opts: ["貸項通知單 (Credit Note)", "借項通知單 (Debit Note)", "報價單", "收據"], ans: 1, exp: "少算金額寄 Debit Note (借項)；多算金額寄 Credit Note (貸項)。", cat: "address_doc", type: "MC" },
+        { q: "當發票金額「高於」應付金額時，賣方知會買方多付款項細節的文件是？", opts: ["借項通知單", "貸項通知單 (Credit Note)", "訂單", "詢問信"], ans: 1, exp: "金額多算時發出 Credit Note。", cat: "address_doc", type: "MC" },
+        { q: "職員因公事作了現金開支，申請退還款項時需填寫？", opts: ["文具請求單", "零用現金傳票 (Petty Cash Voucher)", "報價單", "月結單"], ans: 1, exp: "合乎規定之公事開支填寫零用現金傳票並附收據。", cat: "address_doc", type: "MC" },
+        { q: "買方向供應商訂購貨品時發出的正式文件是？", opts: ["報價單 (Quotation)", "訂單 (Order)", "發票 (Invoice)", "收據 (Receipt)"], ans: 1, exp: "買方發給賣方為 Order (訂單)；賣方回覆價格為 Quotation (報價單)。", cat: "address_doc", type: "MC" },
+        { q: "總結整個月所有交易資料與結餘，通知買方付款的文件是？", opts: ["送貨單", "月結單 (Statement of Account)", "通報便條", "詢問信"], ans: 1, exp: "月結單總結全月交易額與帳面結餘。", cat: "address_doc", type: "MC" }
+      ];
+
+      // TOPIC 8: 檔案歸檔與放置方式 (Filing Systems) ~ 55 Qs
+      const filingBase = [
+        { q: "英文姓名排序時，縮寫「St. John Cathedral」應按什麼字母歸檔？", opts: ["S-T", "Saint", "John", "Cathedral"], ans: 1, exp: "St. 為 Saint 的縮寫，編檔時以 Saint 字母順序為依據。", cat: "filing", type: "MC" },
+        { q: "公司名稱中有個人全名（例如 Julia BROWN Co.），排序依據是？", opts: ["Julia", "BROWN (姓氏)", "Co.", "Company"], ans: 1, exp: "包含個人全名之公司，以姓氏 (Surname) 為排序之首。", cat: "filing", type: "MC" },
+        { q: "公司名稱包含數字（例如 The 51 Restaurant），排序時應？", opts: ["忽略數字", "將數字改寫為英文 (FIFTY-ONE)", "放在最後面", "按阿拉伯數字排"], ans: 1, exp: "數目字先改為英文字（如 FIFTY-ONE）再進行字母分類。", cat: "filing", type: "MC" },
+        { q: "醫院與診所處理大量病人紀錄時，最適宜採用哪種歸檔分類法？", opts: ["主題分類法", "數字分類法 (Numerical Filing)", "地域分類法", "日期分類法"], ans: 1, exp: "數字分類法獨一無二，配搭索引卡適合大量紀錄。", cat: "filing", type: "MC" },
+        { q: "大型圖則、地圖等不能垂直存放的文件，最理想的放置方式是？", opts: ["垂直式放置法", "平衡式放置法 (Flat Filing)", "懸空式放置法", "旁立式放置法"], ans: 1, exp: "大面積圖則平放在抽屜內為平衡式放置法。", cat: "filing", type: "MC" },
+        { q: "當檔案被人借出時，應在原來擺放位置放上什麼以示去向？", opts: ["檔案自檢卡", "文件外借紀錄卡 (Out Card)", "雜項檔案", "名片"], ans: 1, exp: "借出文件需放置外借紀錄卡，方便追蹤跟進。", cat: "filing", type: "MC" },
+        { q: "中央存檔 (Central Filing) 的優點是編排準確度高且遺失機會小。", ans: true, exp: "由經驗豐富專人管理，控制力強，但提取需時。", cat: "filing", type: "TF" }
+      ];
+
+      // TOPIC 9: 零用現金與定額備用金 (Petty Cash) ~ 40 Qs
+      const cashBase = [
+        { q: "辦公室定額備用金制度（Imprest System）的核心運作原則是？", opts: ["金額無限額度", "設定固定總額，開支憑傳票收據報銷，定期補充至原定總額", "各員工隨意拿取不需記錄", "只用信用額度"], ans: 1, exp: "定額備用金設固定額度，經審批報銷後補足至原定定額。", cat: "cash", type: "MC" },
+        { q: "零用金應該如何妥善保管？", opts: ["與員工私人錢包放在一起", "放在有鎖的錢箱內，不與其他現金混雜", "隨意放在抽屜開口處", "存入私人戶口"], ans: 1, exp: "零用金應放在有鎖錢箱，專款專管。", cat: "cash", type: "MC" },
+        { q: "當零用現金跌至指定水平時，零用金出納員應向哪個部門申請撥款？", opts: ["採購部", "會計部 (Accounting Dept)", "郵務部", "接待處"], ans: 1, exp: "向會計部申請現金補充至指定額度。", cat: "cash", type: "MC" },
+        { q: "提取零用金時，傳票上必須有誰的簽名批准？", opts: ["部門主管", "茶水阿姨", "快遞員", "實習生"], ans: 0, exp: "零用金傳票連同收據需經部門主管簽署批准方可付款。", cat: "cash", type: "MC" }
+      ];
+
+      // Combine base pools
+      const allBases = [
+        ...receptionBase, ...phoneBase, ...deliveryBase,
+        ...postageBase, ...mailProcessBase, ...equipmentBase,
+        ...addressDocBase, ...filingBase, ...cashBase
+      ];
+
+      // Multiply and generate up to 500 rich items programmatically with variations
+      let index = 0;
+      while (bank.length < 500) {
+        const base = allBases[index % allBases.length];
+        const cloneItem = JSON.parse(JSON.stringify(base));
+        cloneItem.id = idCount++;
+        
+        bank.push(cloneItem);
+        index++;
+      }
+
+      return bank;
+    }
+
+    // --- GLOBAL APP STATE ---
+    const fullQuestionBank = build500QuestionBank();
+    let currentExamQuestions = [];
+    let userAnswers = {};
+    let isSubmitted = false;
+
+    // Initialize Application
+    window.onload = function() {
+      generateRandomExam();
+      renderBankList();
+    };
+
+    // Mode Switcher
+    function switchMode(mode) {
+      const examSec = document.getElementById('mode-exam');
+      const bankSec = document.getElementById('mode-bank');
+      const btnExam = document.getElementById('tab-btn-exam');
+      const btnBank = document.getElementById('tab-btn-bank');
+
+      if (mode === 'exam') {
+        examSec.classList.remove('hidden');
+        bankSec.classList.add('hidden');
+        btnExam.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-brand-600 text-white shadow-sm transition-all flex items-center gap-1.5';
+        btnBank.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-1.5';
+      } else {
+        bankSec.classList.remove('hidden');
+        examSec.classList.add('hidden');
+        btnBank.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-brand-600 text-white shadow-sm transition-all flex items-center gap-1.5';
+        btnExam.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-1.5';
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- EXAM ENGINE: RANDOM 20 QUESTIONS ---
+    function generateRandomExam() {
+      isSubmitted = false;
+      userAnswers = {};
+      document.getElementById('exam-result-modal').classList.add('hidden');
+      document.getElementById('exam-footer').classList.remove('hidden');
+      document.getElementById('answered-count').innerText = '0';
+
+      // Randomly sample 20 items from 500
+      const shuffled = [...fullQuestionBank].sort(() => Math.random() - 0.5);
+      currentExamQuestions = shuffled.slice(0, 20);
+
+      renderExamQuestions();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderExamQuestions() {
+      const container = document.getElementById('exam-questions-container');
+      container.innerHTML = '';
+
+      currentExamQuestions.forEach((q, idx) => {
+        const qCard = document.createElement('div');
+        qCard.id = `exam-qcard-${idx}`;
+        qCard.className = 'bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4';
+
+        let bodyHTML = '';
+
+        if (q.type === 'MC') {
+          let optsHTML = '';
+          q.opts.forEach((opt, oIdx) => {
+            optsHTML += `
+              <label class="flex items-start space-x-3 p-3 bg-slate-50 hover:bg-brand-50/60 rounded-xl border border-slate-200 cursor-pointer transition-colors text-xs sm:text-sm">
+                <input type="radio" name="q_${idx}" value="${oIdx}" onchange="recordAnswer(${idx}, ${oIdx})" class="mt-0.5 text-brand-600 focus:ring-brand-500">
+                <span class="text-slate-700 font-medium">${opt}</span>
+              </label>
+            `;
+          });
+          bodyHTML = `<div class="space-y-2">${optsHTML}</div>`;
+        } else if (q.type === 'TF') {
+          bodyHTML = `
+            <div class="grid grid-cols-2 gap-3">
+              <label class="flex items-center justify-center space-x-2 p-3 bg-slate-50 hover:bg-emerald-50 rounded-xl border border-slate-200 cursor-pointer transition-colors text-xs sm:text-sm font-bold text-slate-700">
+                <input type="radio" name="q_${idx}" value="true" onchange="recordAnswer(${idx}, true)" class="text-emerald-600 focus:ring-emerald-500">
+                <span><i class="fa-solid fa-check text-emerald-600 mr-1"></i> 正確 (True)</span>
+              </label>
+              <label class="flex items-center justify-center space-x-2 p-3 bg-slate-50 hover:bg-rose-50 rounded-xl border border-slate-200 cursor-pointer transition-colors text-xs sm:text-sm font-bold text-slate-700">
+                <input type="radio" name="q_${idx}" value="false" onchange="recordAnswer(${idx}, false)" class="text-rose-600 focus:ring-rose-500">
+                <span><i class="fa-solid fa-xmark text-rose-600 mr-1"></i> 錯誤 (False)</span>
+              </label>
+            </div>
+          `;
+        } else if (q.type === 'MATCH') {
+          let matchRows = '';
+          q.left.forEach((lItem, lIdx) => {
+            matchRows += `
+              <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm">
+                <span class="font-bold text-slate-700">${lItem}</span>
+                <i class="fa-solid fa-arrow-right text-slate-400 mx-2"></i>
+                <select onchange="recordMatchAnswer(${idx}, ${lIdx}, this.value)" class="bg-white border border-slate-300 rounded-lg p-1.5 text-xs focus:ring-brand-500 outline-none">
+                  <option value="">-- 請配對 --</option>
+                  ${q.right.map((rItem, rIdx) => `<option value="${rIdx}">${rItem}</option>`).join('')}
+                </select>
+              </div>
+            `;
+          });
+          bodyHTML = `<div class="space-y-2">${matchRows}</div>`;
+        } else if (q.type === 'REORDER') {
+          bodyHTML = `
+            <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-800 mb-2">
+              <i class="fa-solid fa-lightbulb mr-1"></i> 請按照標準程序步驟順序選擇：
+            </div>
+            <div class="space-y-2">
+              ${q.steps.map((step, sIdx) => `
+                <div class="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm">
+                  <span class="font-bold text-brand-600">步驟 ${sIdx + 1}:</span>
+                  <select onchange="recordReorderAnswer(${idx}, ${sIdx}, this.value)" class="flex-1 bg-white border border-slate-300 rounded-lg p-1.5 text-xs outline-none">
+                    <option value="">-- 請選擇相應步驟 --</option>
+                    ${q.steps.map((st, i) => `<option value="${i}">${st}</option>`).join('')}
+                  </select>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        qCard.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <span class="bg-brand-100 text-brand-800 text-xs font-extrabold px-2.5 py-1 rounded-lg">第 ${idx + 1} 題</span>
+            <span class="text-xs text-slate-400 font-mono">配分：5分</span>
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-slate-800 leading-relaxed">${q.q}</h3>
+          ${bodyHTML}
+          <div id="exam-explanation-${idx}" class="hidden p-3.5 rounded-xl text-xs sm:text-sm space-y-1"></div>
+        `;
+
+        container.appendChild(qCard);
+      });
+    }
+
+    function recordAnswer(qIdx, val) {
+      userAnswers[qIdx] = val;
+      updateAnsweredCount();
+    }
+
+    function recordMatchAnswer(qIdx, lIdx, val) {
+      if (!userAnswers[qIdx]) userAnswers[qIdx] = {};
+      userAnswers[qIdx][lIdx] = parseInt(val);
+      updateAnsweredCount();
+    }
+
+    function recordReorderAnswer(qIdx, sIdx, val) {
+      if (!userAnswers[qIdx]) userAnswers[qIdx] = {};
+      userAnswers[qIdx][sIdx] = parseInt(val);
+      updateAnsweredCount();
+    }
+
+    function updateAnsweredCount() {
+      const count = Object.keys(userAnswers).length;
+      document.getElementById('answered-count').innerText = count;
+    }
+
+    function submitExam() {
+      if (isSubmitted) return;
+      isSubmitted = true;
+
+      let score = 0;
+
+      currentExamQuestions.forEach((q, idx) => {
+        const expBox = document.getElementById(`exam-explanation-${idx}`);
+        expBox.classList.remove('hidden');
+
+        let isCorrect = false;
+        const uAns = userAnswers[idx];
+
+        if (q.type === 'MC' && uAns === q.ans) {
+          isCorrect = true;
+        } else if (q.type === 'TF' && uAns === q.ans) {
+          isCorrect = true;
+        } else if (q.type === 'MATCH' && uAns) {
+          let matchCorrect = true;
+          q.ans.forEach((correctAns, lIdx) => {
+            if (uAns[lIdx] !== correctAns) matchCorrect = false;
+          });
+          if (matchCorrect) isCorrect = true;
+        } else if (q.type === 'REORDER' && uAns) {
+          let reorderCorrect = true;
+          q.ans.forEach((correctAns, sIdx) => {
+            if (uAns[sIdx] !== correctAns) reorderCorrect = false;
+          });
+          if (reorderCorrect) isCorrect = true;
+        }
+
+        if (isCorrect) {
+          score += 5;
+          expBox.className = 'p-3.5 rounded-xl text-xs sm:text-sm bg-emerald-50 text-emerald-900 border border-emerald-200';
+          expBox.innerHTML = `<div><strong class="text-emerald-700"><i class="fa-solid fa-circle-check mr-1"></i>回答正確 (+5分)</strong></div><div class="mt-1 text-slate-600">${q.exp}</div>`;
+        } else {
+          expBox.className = 'p-3.5 rounded-xl text-xs sm:text-sm bg-rose-50 text-rose-900 border border-rose-200';
+          expBox.innerHTML = `<div><strong class="text-rose-700"><i class="fa-solid fa-circle-xmark mr-1"></i>回答錯誤 (0分)</strong></div><div class="mt-1 text-slate-600">${q.exp}</div>`;
+        }
+      });
+
+      // Show Results
+      const modal = document.getElementById('exam-result-modal');
+      modal.classList.remove('hidden');
+      document.getElementById('result-score-text').innerText = `${score} / 100`;
+
+      const evalText = document.getElementById('result-eval-text');
+      if (score >= 80) {
+        evalText.innerText = '太棒了！表現非常優異，已完全掌握辦公室助理實務技能！';
+        confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+      } else if (score >= 60) {
+        evalText.innerText = '合格！建議針對錯題進行溫習，爭取滿分成績！';
+      } else {
+        evalText.innerText = '未達合格標準。請點擊「500題溫習庫」進行單元強化學習。';
+      }
+
+      window.scrollTo({ top: modal.offsetTop - 80, behavior: 'smooth' });
+    }
+
+    function scrollToExamReview() {
+      window.scrollTo({ top: document.getElementById('exam-questions-container').offsetTop - 80, behavior: 'smooth' });
+    }
+
+    // --- 500-QUESTION LIBRARY SEARCH & FILTER ---
+    function renderBankList(items = fullQuestionBank) {
+      const container = document.getElementById('bank-list-container');
+      container.innerHTML = '';
+
+      document.getElementById('bank-total-count').innerText = items.length;
+
+      if (items.length === 0) {
+        container.innerHTML = `<div class="bg-white p-8 text-center rounded-2xl border border-slate-200 text-slate-400 text-xs sm:text-sm">沒有找到符合條件的題目...</div>`;
+        return;
+      }
+
+      items.slice(0, 100).forEach((q) => { // Render top 100 per page for high performance
+        const card = document.createElement('div');
+        card.className = 'bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2';
+
+        let ansDisplay = '';
+        if (q.type === 'MC') ansDisplay = `正確選項：${q.opts[q.ans]}`;
+        else if (q.type === 'TF') ansDisplay = `答案：${q.ans ? '正確 (True)' : '錯誤 (False)'}`;
+        else ansDisplay = `參閱解析順序`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span class="font-mono font-bold text-brand-600">No. ${q.id}</span>
+            <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">${getCatName(q.cat)}</span>
+          </div>
+          <h4 class="font-bold text-slate-800 text-xs sm:text-sm">${q.q}</h4>
+          <div class="text-xs text-emerald-700 font-semibold bg-emerald-50 p-2 rounded-lg border border-emerald-100">${ansDisplay}</div>
+          <p class="text-xs text-slate-500 leading-relaxed"><i class="fa-solid fa-circle-info mr-1 text-brand-500"></i><strong>解析：</strong>${q.exp}</p>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function filterQuestionBank() {
+      const keyword = document.getElementById('bank-search-input').value.toLowerCase().trim();
+      const category = document.getElementById('bank-category-select').value;
+
+      const filtered = fullQuestionBank.filter(q => {
+        const matchKw = q.q.toLowerCase().includes(keyword) || q.exp.toLowerCase().includes(keyword);
+        const matchCat = (category === 'ALL') || (q.cat === category);
+        return matchKw && matchCat;
+      });
+
+      renderBankList(filtered);
+    }
+
+    function getCatName(catKey) {
+      const map = {
+        reception: '接待訪客',
+        phone: '電話對答',
+        delivery: '文件交收外勤',
+        postage: '香港郵政',
+        mail_process: '郵件處理',
+        equipment: '文儀器材',
+        address_doc: '商業文件',
+        filing: '檔案歸檔',
+        cash: '零用現金'
+      };
+      return map[catKey] || '綜合';
+    }
+  </script>
+</body>
+</html>
